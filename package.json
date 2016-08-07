@@ -1,0 +1,17 @@
+{
+  "name": "lights",
+  "version": "1.0.0",
+  "description": "script for lights",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "noble": "^1.6.0",
+    "noble-device": "^1.4.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "curioussavage",
+  "license": "ISC"
+}
