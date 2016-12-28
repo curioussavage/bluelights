@@ -1,13 +1,15 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+
 var exphbs  = require('express-handlebars');
 var handlebars = require('handlebars');
+var helpers = require('./templateHelpers');
 var config = require('./config.json');
 
 var Device = require('./device.js');
 
 var expressApp = express();
-expressApp.engine('handlebars', exphbs({defaultLayout: 'main'}));
+expressApp.engine('handlebars', exphbs({defaultLayout: 'main', helpers: helpers}));
 expressApp.set('view engine', 'handlebars');
 expressApp.use(bodyParser.json())
 expressApp.use('/' + config.appPrefix + '/static', express.static(__dirname + '/static'));
@@ -42,7 +44,6 @@ function initialize(app) {
         stringifiedConfig: new handlebars.SafeString(JSON.stringify(clientSafeConfig))
       };
 
-      console.log('hello ', data)
 			res.render('home', data);
 		});
 	});
@@ -59,6 +60,7 @@ function initialize(app) {
 	appRouter.post('/update', function(req, res) {
 		console.log('new white', req.body)
     var id = req.body.id;
+    if (!id) { return res.send('no id'); }
     var device = getDevice(app, id);
 
 		if (!['white', 'red', 'green', 'blue'].indexOf(req.body.color) === -1) {
@@ -115,11 +117,10 @@ function initialize(app) {
   appRouter.post('/connect', function(req, res) {
     var id = req.body.id;
 
-
     var peripheral = app.peripherals.find(function(p) { return p.id === id });
-    // connect should be called manually instead of in the constructor of device
     var device = new Device(peripheral, '');
-    console.log('connecting to ... ', device._id)
+
+    console.log('connecting to ... ', device.id)
     device.connect(function(err) {
       if (!err) {
         app.devices.push(device);

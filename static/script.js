@@ -24,7 +24,8 @@ sliders.on('change', function(e) {
   console.log('changed ', e.target.value);
   e.target.nextElementSibling.textContent = e.target.value
   var color = e.target.dataset.color;
-  var data = JSON.stringify({color: color, value: parseInt(e.target.value)}); 
+  var id = e.target.dataset.id;
+  var data = JSON.stringify({id: id, color: color, value: parseInt(e.target.value)}); 
   promise.post(prefix + '/update', data, contentType);
 })       
     

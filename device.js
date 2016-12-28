@@ -1,6 +1,6 @@
 function Device(device, name) {
   this._device = device;
-  this._id = device.id;
+  this.id = device.id;
   this._name = name || 'New Device';
 }
 
@@ -62,7 +62,7 @@ Device.prototype.getState = function() {
   // should return a promise that resolves
   // to an object that has all the current color values
   //
-  var id = this._id;
+  var id = this.id;
   var name = this._name;
 
   return new Promise(function(resolve, reject) {
@@ -73,7 +73,6 @@ Device.prototype.getState = function() {
     promises.push(this.readHandle(this.characteristicIds.blue));
 
     return Promise.all(promises).then(function(colors) {
-      console.log('promise.all in getSTate()')
       var deviceInfo = {
         white: colors[0],
         red: colors[1],
