@@ -1,110 +1,85 @@
 var noble = require('noble');
 var server = require('./server.js');
+var Device = require('./device.js');
 
-function init(callback) {
-	console.log('init running')
-	console.log(noble.state)
-
-	if (noble.state === 'poweredOn') {
-		noble.startScanning();
-	}
-
-	noble.on('stateChange', function(state) {
-		if (state == 'poweredOn') {
-			console.log('state on ..')
-			noble.startScanning()
-		} else {
-			console.log('stopping scan')
-			console.log('state: ', state)
-			noble.stopScanning()
-		}
-	})
-
-	noble.on('discover', function(peripheral) {
-	  if (peripheral.id == '987bf370b985') {
-		device = new Device(peripheral);
-		if (callback) {
-			callback(device);
-		}
-		console.log('connected')
-		noble.stopScanning();
-	  }
-	});
-
-	noble.on('disconnect', function(p) {
-		console.log('disconnected', p);
-		noble.startScanning();
-	})
-
-	process.on('SIGTERM', function () {
-		noble.stopscanning();
-		device.disconnect();
-	})
-
-	function Device(device) {
-		this._device = device;
-		this._id = device.id;
-		this._init_();
-	}
-
-	Device.prototype.characteristicIds = {
-		'white': 'ffea',
-		'green': 'ffe7',
-		'red': 'ffe6',
-		'blue': 'ffe8',
-	}
-
-	Device.prototype.lightsServiceId = 'ffe5';
-
-	Device.prototype.makeHex = function(num) {
-		if (num > 255 || num < 0) {
-			console.log('num out of range')
-			return new Buffer(['0x00']);
-		}
-		return new Buffer(['0x' + num.toString(16)]);
-	}
-
-	Device.prototype.fromHex = function(hexBuffer) {
-		return parseInt(hexBuffer.hexSlice(), 16);
-	}
-
-	Device.prototype._init_ = function() {
-		this._device.connect(function(err) {
-			if (!err) {
-				//this.discoverServices();
-				this._device.discoverAllServicesAndCharacteristics(function(err, services, characteristics) {
-					this._lightService = this._device.services.find(function(s){return s.uuid === 'ffe5'})	
-					server(this)
-				}.bind(this));
-			}
-		}.bind(this));
-	}
-
-	Device.prototype.connect = function() {
-		this._device.connect();
-	}
-
-	Device.prototype.disconnect = function() {
-		this._device.disconnect();
-	}
-
-	Device.prototype.readHandle = function(handle, cb) {
-		//this._device.readHandle(handle, cb)
-		cb = cb || function(){}
-		this._lightService.characteristics.find(function(c) {return c.uuid === handle}).read(function(err, d){
-			var data = this.fromHex(d);
-			cb(data)	
-		}.bind(this));
-	}
-
-	Device.prototype.writeHandle = function(handle, data, cb) {
-		data = this.makeHex(data);
-		cb = cb || function() {}
-		this._lightService.characteristics.find(function(c) {return c.uuid === handle}).write(data, true, cb)
-		//this._device.writeHandle(handle, data, true, cb)
-	}
-
+var scanTime = 60 * 1000;
+function scan() {
+  if (noble.state === 'poweredOn' && !app.isScanning) {
+    app.peripherals = [];
+    noble.startScanning();
+    setTimeout(function() { noble.stopScanning(); }, scanTime);
+  }
 }
 
+var app = {
+    noble: noble,
+    devices: [],
+    peripherals: [],
+    scan: scan,
+    isScanning: false
+};
+
+noble.on('stateChange', function(state) {
+  console.log('state is now: ', state);
+  if (state == 'poweredOn') {
+  } else {
+    console.log('stopping scan');
+    noble.stopScanning();
+  }
+});
+
+noble.on('disconnect', function(p) {
+  console.log('disconnected ', p);
+});
+
+noble.on('scanStart', function() {
+  app.isScanning = true;
+  console.log('app scanning...');
+});
+
+noble.on('scanStop', function() {
+  app.isScanning = false;
+  console.log('app stopping scan.');
+});
+
+process.on('SIGTERM', function () {
+  console.log('shutting down');
+  noble.stopScanning();
+});
+
+function getDevice(savedDevices, id) {
+  return savedDevices.find(function(d) { return d.id === id });
+}
+
+function init(savedDevices) {
+	console.log('init running');
+	console.log('noble state: ', noble.state);
+
+	if (noble.state === 'poweredOn') {
+    scan();
+	}
+
+  // my lights id is '987bf370b985'
+  // I don't need this anymore but just for reference.
+	noble.on('discover', function(peripheral) {
+    var savedDevice = getDevice(savedDevices, peripheral.id); 
+    console.log('detected: ', peripheral.advertisement.localName)
+	  if (savedDevice) {
+      var name = savedDevice.name || peripheral.advertisement.localName || '';
+      var device = new Device(peripheral, name);
+      device.connect(function(err) {
+        if (!err) {
+          app.devices.push(device);
+        } else {
+          app.peripherals.push(peripheral);
+        }
+      });
+	  } else {
+      app.peripherals.push(peripheral);
+    }
+	});
+  
+  return app;
+}
 
 module.exports = init;

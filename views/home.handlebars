@@ -1,0 +1,46 @@
+<div class='wrapper'>
+  <div>
+  {{#each peripherals }}
+  {{#with this}}
+    <div>
+      <span> {{localName}} </span> 
+      <button data-id={{id}} class='connect-btn'>connect</button>
+    </div>
+  {{/with}}
+  {{/each}}
+  </div> 
+
+  {{#each devices }}
+  <div>
+    <h3> {{name}} </h3>
+    <button data-deviceid={{ id }} id='toggle-light'>Toggle</button>
+
+    <div class='slider-wrap'>
+        <input class='brightness-slider' type='range'  min=0 max=255 value='{{white}}' data-color='white' />
+        <span>{{white}}</span>
+    </div>
+    <div class='slider-wrap'>
+        <input class='brightness-slider' type='range' min=0 max=255 value='{{red}}' data-color='red' />
+        <span>{{red}}</span>
+    </div>
+
+    <div class='slider-wrap'>
+        <input class='brightness-slider' type='range' min=0 max=255 value='{{green}}' data-color='green' />
+        <span>{{green}}</span>
+    </div>
+
+    <div class='slider-wrap'>
+        <input class='brightness-slider' type='range' min=0 max=255 value='{{blue}}' data-color='blue' />
+        <span>{{blue}}</span>
+    </div>
+  </div>
+  {{else}}
+    <p> No connected devices </p>
+  {{/each}}
+
+
+    <script>
+      window.__app = {};
+      window.__app.config = {{ stringifiedConfig }};
+    </script>
+</div>
