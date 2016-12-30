@@ -12,7 +12,9 @@
 
   {{#each devices }}
   <div>
-    <h3> {{name}} </h3>
+    <h3 class='light-name'> {{name}} </h3>
+    <button class='light-title-edit' >edit</button>
+    <button data-id={{id}} class='light-title-save' hidden>save</button>
     <button data-deviceid={{ id }} id='toggle-light'>Toggle</button>
 
     <div class='slider-wrap'>

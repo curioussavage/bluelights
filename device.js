@@ -1,7 +1,20 @@
 function Device(device, name) {
   this._device = device;
   this.id = device.id;
-  this._name = name || 'New Device';
+  this._name = name;
+  if (!this._name) {
+    this._name = device.advertisement ?
+    device.advertisement.localName : 'New Device';
+  }
+
+  device.once('connect', function() {
+    console.log('connected to ', this._name, ' ', this.id);  
+  }.bind(this));
+
+  device.once('disconnect', function() {
+    console.log('disconnected from ', this._name, ' ', this.id);  
+    this.connect();
+  }.bind(this));
 }
 
 Device.prototype.characteristicIds = {
@@ -26,6 +39,7 @@ Device.prototype.fromHex = function(hexBuffer) {
 }
 
 Device.prototype.connect = function(cb) {
+  cb = cb || function() {}
   this._device.connect(function(err) {
     cb(err);
     if (!err) {
@@ -65,6 +79,7 @@ Device.prototype.getState = function() {
   var id = this.id;
   var name = this._name;
 
+  console.log('fetching state of ', id);
   return new Promise(function(resolve, reject) {
     var promises = [];
     promises.push(this.readHandle(this.characteristicIds.white));
@@ -73,6 +88,7 @@ Device.prototype.getState = function() {
     promises.push(this.readHandle(this.characteristicIds.blue));
 
     return Promise.all(promises).then(function(colors) {
+      console.log('state for ', id, ' retrieved');
       var deviceInfo = {
         white: colors[0],
         red: colors[1],

@@ -23,7 +23,7 @@ noble.on('stateChange', function(state) {
   console.log('state is now: ', state);
   if (state == 'poweredOn') {
   } else {
-    console.log('stopping scan');
+    console.log('stopping scan. REASON: state changed');
     noble.stopScanning();
   }
 });
@@ -67,6 +67,7 @@ function init(savedDevices) {
 	  if (savedDevice) {
       var name = savedDevice.name || peripheral.advertisement.localName || '';
       var device = new Device(peripheral, name);
+      console.log('connecting to ', device.id, '...');
       device.connect(function(err) {
         if (!err) {
           app.devices.push(device);

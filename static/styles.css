@@ -38,6 +38,10 @@ body {
   cursor: pointer;
 }
 
+.light-name {
+  display: inline-block;
+}
+
 input[type=range] {
   -webkit-appearance: none;
   width: 80%;

@@ -7,6 +7,7 @@ var helpers = require('./templateHelpers');
 var config = require('./config.json');
 
 var Device = require('./device.js');
+var db = require('./db.js');
 
 var expressApp = express();
 expressApp.engine('handlebars', exphbs({defaultLayout: 'main', helpers: helpers}));
@@ -90,8 +91,8 @@ function initialize(app) {
 			if (data > 0) {
 				 lastWhiteVal = data;
 				 device.writeHandle(device.characteristicIds.white, 0).then(function(err){
-					res.sendStatus(200);
-				});
+					  res.sendStatus(200);
+          });
 		    } else {
 			  var num = lastWhiteVal !== null ? lastWhiteVal : 255;
 			  device.writeHandle(device.characteristicIds.white, num).then(function(err){
@@ -120,14 +121,35 @@ function initialize(app) {
     var peripheral = app.peripherals.find(function(p) { return p.id === id });
     var device = new Device(peripheral, '');
 
-    console.log('connecting to ... ', device.id)
+    console.log('connecting to ', device.id, '...');
     device.connect(function(err) {
       if (!err) {
         app.devices.push(device);
         app.peripherals = app.peripherals.filter(function(p) { return p.id !== id});
+        db.insert({ id: device.id, name: device._name}, function(err, doc) {
+          if (!err) {
+            console.log('saved device'); 
+          }
+        });
+
         res.send('connected');
       } else {
         res.send('not connected');
+      }
+    });
+  });
+
+  appRouter.post('/save-title', function(req, res) {
+    var id = req.body.id;
+    var title = req.body.title;
+
+    var device = getDevice(app, id);
+    device._name = title;
+    db.update({id: id}, {$set: { name: title }}, {}, function(err,num){
+      if (!err) {
+        res.send('updated');
+      } else {
+        res.send('could not update');
       }
     });
   });

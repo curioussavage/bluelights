@@ -29,8 +29,9 @@ sliders.on('change', function(e) {
   promise.post(prefix + '/update', data, contentType);
 })       
     
-button.on('click', function(){         
-  promise.post(prefix + '/toggle')        
+button.on('click', function(e){
+  var data = JSON.stringify({ id: e.target.dataset.deviceid });
+  promise.post(prefix + '/toggle', data, contentType);
 })
 
 var connectBtns =  $('.connect-btn');
@@ -43,4 +44,29 @@ connectBtns.on('click', function(e) {
   promise.post(prefix + '/connect', data, contentType).then(function(bool, res) {
    console.log(res) 
   });
+});
+
+var editBtns = $('.light-title-edit');
+var saveBtns = $('.light-title-save');
+
+editBtns.on('click', function(e) {
+  e.target.hidden = true;
+  var title = e.target.parentNode.getElementsByClassName('light-name')[0];
+  title.contentEditable = true;
+  title.focus();
+
+  var savebtn = e.target.parentNode.getElementsByClassName('light-title-save')[0];
+  savebtn.hidden = false;
+});
+
+saveBtns.on('click', function(e) {
+  var id = e.target.dataset.id;
+  var titleEl = e.target.parentNode.getElementsByClassName('light-name')[0];
+  var title = titleEl.textContent;
+  var data = JSON.stringify({id: id, title: title});
+  promise.post(prefix + '/save-title', data, contentType);
+  var editBtn = e.target.parentNode.getElementsByClassName('light-title-edit')[0];
+  editBtn.hidden = false;
+  e.target.hidden = true; 
+  titleEl.contentEditable = false;
 });
